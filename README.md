@@ -2,9 +2,9 @@
 
 # Kurious
 
-**Ask any question across PDFs, videos, spreadsheets, and recordings. Get a grounded answer in one call.**
+**Take a multimodal corpus from local disk to a queryable index, using only the public SDK.**
 
-[Quickstart](#getting-started) · [Examples](examples/) · [Discord](https://discord.gg/aintropy-community) · [Discussions](https://github.com/Kurious-AI/getting-started/discussions)
+[Quickstart](#getting-started) · [Discord](https://discord.gg/aintropy-community) · [Discussions](https://github.com/Kurious-AI/getting-started/discussions)
 
 </div>
 
@@ -12,14 +12,9 @@
 
 ## What is Kurious
 
-A single tool that reads all your unstructured content and answers questions in plain English. Every answer links back to the source.
+One tool that reads all your unstructured content (PDFs, Word docs, spreadsheets, audio, video) and answers questions in plain English. Every answer links back to the exact source span (page and character range for documents, start and end timestamps for video).
 
-```mermaid
-flowchart LR
-    A[Your files<br/>PDFs, videos,<br/>audio, spreadsheets] --> B[Kurious]
-    B --> C[Ask a question]
-    C --> D[Answer<br/>+ source link]
-```
+You skip the database, the embedder, the chunker, the transcription pipeline, and the citation glue. You write the question.
 
 ---
 
@@ -28,8 +23,8 @@ flowchart LR
 | Without Kurious | With Kurious |
 |---|---|
 | Pick a database, a model, a chunker. Wire them up. Maintain them. | One package. A few lines of code. |
-| Separate code paths for documents, spreadsheets, and video. | One call, routed for you. |
-| Bolt on OCR, transcription, and frame extraction. | All formats handled. |
+| Separate code paths for documents, spreadsheets, and video. | One call covers all formats. |
+| Bolt on OCR, transcription, and frame analysis. | One ingest pipeline handles them. |
 | Build citations from scratch. | Citations by default. |
 | Run and scale servers. | Hosted. |
 
@@ -37,213 +32,315 @@ flowchart LR
 
 ## What you can build
 
-| Use case | Example question |
-|---|---|
-| Internal Q&A | "What is our PTO policy for new hires?" |
-| Meeting search | "What did the customer say about renewal in March?" |
-| Contract review | "Which contracts mention exclusivity?" |
-| Cross-format research | "Summarize Q3 using filings and call recordings" |
-| Side-by-side comparison | Same question, twenty cities |
+- **Internal Q&A.** *"What is our PTO policy for new hires?"*
+- **Meeting search.** *"What did the customer say about renewal in March?"*
+- **Contract review at scale.** *"Which contracts mention exclusivity?"*
+- **Cross-format research.** Combine filings, analyst PDFs, and earnings call recordings in one project.
+- **Side-by-side comparison.** Same question, twenty cities. See where they differ.
 
 ---
 
 ## Prerequisites
 
-| Requirement | How to check |
+| You need | How to check or get it |
 |---|---|
-| Python 3.10 or newer | Run `python --version` in your terminal |
-| A terminal app | Mac: Terminal. Windows: PowerShell |
-| About 10 minutes | For Explore Mode |
+| **Python 3.12 or newer** | Run `python --version` in your terminal. If you do not have it, download from [python.org](https://www.python.org/downloads/). |
+| **A terminal app** | Mac: Terminal. Windows: PowerShell. Both come pre-installed. |
+| **Your Aintropy access token (PAT)** | Aintropy emails you a Personal Access Token. This is what unlocks the SDK download. |
+| **Your test account** | An email, password, full name, and company name you will use to sign up against the Kurious backend. |
+| **A file to search** | Any PDF, Word doc, spreadsheet, image, audio, or video file on your computer. For video: `mp4`, `mov`, `mkv`, or `webm`. |
 
 > [!NOTE]
-> No Docker. No servers. No other accounts.
+> No Docker. No servers. No other accounts. The SDK installs through `pip` like any Python package.
+
+---
+
+## Install the SDK
+
+Open your terminal. Paste your access token into the first command, replacing the placeholder. Then run the install.
+
+```bash
+export AZURE_DEVOPS_TOKEN="<paste your PAT here>"
+```
+
+```bash
+pip install --upgrade "aintropy==0.5.5" \
+  --index-url "https://aintropy:${AZURE_DEVOPS_TOKEN}@pkgs.dev.azure.com/AIntropy-DevOps/Kurious-SDK/_packaging/kurious-sdk-pypi/pypi/simple/" \
+  --extra-index-url "https://pypi.org/simple/"
+```
+
+```bash
+pip install jupyter requests
+```
+
+**Verify it worked:**
+
+```bash
+python -c "import aintropy; print(aintropy.__version__)"
+```
+
+You should see `0.5.5` printed. If you do, the SDK is ready.
+
+> [!TIP]
+> Hit `401 Unauthorized`? Your token is missing or wrong. Re-export `AZURE_DEVOPS_TOKEN` and try again.
 
 ---
 
 ## Getting started
 
-### Pick a mode
-
-| | **Explore Mode** | **Builder Mode** |
-|---|:---:|:---:|
-| **Goal** | Try Kurious on sample data | Search your own files |
-| **Time** | ~60 seconds | ~30 minutes |
-| **Setup** | Trial key | Setup wizard |
-
-Start with Explore Mode. Move to Builder Mode when you are ready.
-
----
-
-### Explore Mode
+Five steps from zero to a working query.
 
 ```mermaid
 flowchart LR
-    A[1. Install] --> B[2. Set trial key] --> C[3. Run first query]
+    A[1. Pick a file] --> B[2. Sign in<br/>+ get API key] --> C[3. Create<br/>a project] --> D[4. Ingest] --> E[5. Search]
 ```
-
-**1. Install**
-
-```bash
-pip install artifacts-keyring
-pip install "aintropy>=0.5.5,<0.6" --index-url "https://pkgs.dev.azure.com/AIntropy-DevOps/Kurious-SDK/_packaging/kurious-sdk-pypi/pypi/simple/"
-```
-
-> [!TIP]
-> Hit `401 Unauthorized`? See [Troubleshooting](#troubleshooting).
-
-**2. Set your trial key**
-
-```bash
-export KURIOUS_API_KEY="trial_REPLACE_ME"
-```
-
-**3. Save this as `first_query.py` and run `python first_query.py`**
-
-```python
-import os
-from aintropy import AIntropy
-
-client = AIntropy(api_key=os.environ["KURIOUS_API_KEY"])
-
-louisville = next(
-    p for p in client.projects.list().projects
-    if "louisville" in p.name.lower()
-)
-
-result = client.search.intelligent(
-    project_id=louisville.id,
-    query="What did the council decide about affordable housing?",
-    mode="quick",
-)
-
-print(result.answer)
-```
-
-#### Sample collections you can search
-
-| Collection | Contents |
-|---|---|
-| Louisville Council | City council video |
-| Seattle Council | City council video |
-| NJ Open Data | Government spreadsheets |
-| Legal Video Archive | Court recordings |
-| ChemRAG | Chemistry research |
 
 ---
 
-### Builder Mode
-
-```mermaid
-flowchart LR
-    A[1. kurious init] --> B[2. Load your files] --> C[3. Ask questions]
-```
-
-**1. Run the setup wizard**
-
-```bash
-kurious init
-```
-
-It asks for your name, email, organization, and a project name. Your API key is saved automatically.
-
-**2. Load your files**
+### Step 1. Point at your file
 
 ```python
 import os
-from aintropy import AIntropy
 
-client = AIntropy(api_key=os.environ["KURIOUS_API_KEY"])
-project_id = client.projects.list().projects[0].id
+FILE_PATH    = os.path.expanduser("~/Desktop/my_video.mp4")   # replace with your file
+PROJECT_NAME = "my-first-project"                              # replace with your project name
 
-client.projects.ingest(project_id, "./my-docs/", wait=True)
+assert os.path.isfile(FILE_PATH), f"FILE_PATH does not exist: {FILE_PATH}"
+size_mb = os.path.getsize(FILE_PATH) / (1024 * 1024)
+print(f"  file: {FILE_PATH}")
+print(f"  size: {size_mb:.1f} MB")
 ```
 
-**3. Ask a question**
+The `os.path.expanduser` part turns `~` into your home folder so the path works on any computer.
+
+---
+
+### Step 2. Sign in and get an API key
+
+Kurious uses two endpoints to set up your session:
+
+1. **Users service** for signup or login. Returns a short-lived JWT (a temporary login token).
+2. **API keys service** to mint a long-lived API key from the JWT.
+
+Then you wrap both in the `AIntropy(...)` client.
 
 ```python
-result = client.search.intelligent(
-    project_id=project_id,
-    query="Your question here"
+import requests
+from aintropy import AIntropy
+
+BASE_URL  = "https://kurious-backend-dev-api.centralus.cloudapp.azure.com/api/v1"
+USERS_URL = "https://kurious-backend-dev-api.centralus.cloudapp.azure.com/users"
+
+TEST_EMAIL     = "you@yourcompany.com"   # replace
+TEST_PASSWORD  = "YourStrongPassword!"   # replace
+TEST_FULL_NAME = "Your Name"             # replace
+TEST_COMPANY   = "your-company"          # replace
+
+# Signup, or fall back to login if the account already exists
+r = requests.post(
+    f"{USERS_URL}/auth/signup",
+    json={
+        "email": TEST_EMAIL,
+        "password": TEST_PASSWORD,
+        "full_name": TEST_FULL_NAME,
+        "company_name": TEST_COMPANY,
+    },
+    timeout=30,
 )
-print(result.answer)
+if r.status_code == 409:   # account already exists, log in instead
+    r = requests.post(
+        f"{USERS_URL}/auth/login",
+        json={"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        timeout=30,
+    )
+r.raise_for_status()
+tokens = r.json()
+print(f"  JWT: {tokens['access_token'][:16]}...")
+
+# Exchange the JWT for a longer-lived API key + your company ID
+r = requests.post(
+    f"{BASE_URL}/api-keys/create",
+    headers={
+        "Authorization": f"Bearer {tokens['access_token']}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "name": "my-first-key",
+        "access_type": "read_write",
+        "max_index": 10,
+        "max_size_gb": 5.0,
+        "expiry_days": 7,
+    },
+    timeout=30,
+)
+r.raise_for_status()
+k = r.json()
+api_key, company_id = k["api_key"], k["company_id"]
+print(f"  API key: {api_key[:12]}... company={company_id}")
+
+# Build the SDK client and attach your company ID to every request
+client = AIntropy(api_key=api_key, base_url=BASE_URL)
+_orig = client._transport._build_headers
+def _with_cid(extra=None, _o=_orig, _c=company_id, **kw):
+    h = _o(extra, **kw)
+    h.setdefault("X-Company-ID", _c)
+    return h
+client._transport._build_headers = _with_cid
+print("  client ready")
 ```
-
-#### Supported file types
-
-| Documents | Spreadsheets | Images | Audio | Video |
-|:---:|:---:|:---:|:---:|:---:|
-| PDF, DOCX, TXT, MD | CSV, Parquet | PNG, JPG | MP3, WAV | MP4 |
 
 > [!IMPORTANT]
-> A 60-minute video takes about 10 to 15 minutes to load. Documents are usually ready in seconds.
+> The last block (`_with_cid`) tells the SDK to attach your `company_id` to every request. The Kurious backend currently requires this header. Copy the block as-is. You only run this once per session.
+
+**What `api-keys/create` accepts:**
+
+| Field | What it means |
+|---|---|
+| `name` | A label for this key. Anything you want. |
+| `access_type` | `read_write` or `read_only`. |
+| `max_index` | How many projects this key can use. |
+| `max_size_gb` | Total storage this key can occupy. |
+| `expiry_days` | How long the key stays valid. |
+
+---
+
+### Step 3. Create (or reuse) a project
+
+A **project** is a named container for one set of files. You can have many projects, for example one for your handbook and one for your contracts. Search runs inside one project at a time.
+
+```python
+lst = client.projects.list(skip=0, limit=50)
+project = next((p for p in lst.projects if p.name == PROJECT_NAME), None)
+if project is None:
+    project = client.projects.create(
+        name=PROJECT_NAME,
+        description="My first Kurious project",
+    )
+PROJECT_ID = project.id
+print(f"  PROJECT_ID = {PROJECT_ID}")
+```
+
+This first asks Kurious for projects that already exist. If yours is there, reuse it. Otherwise create it.
+
+> [!IMPORTANT]
+> Run this once right after creating a new project:
+> ```python
+> client.projects.update_config(PROJECT_ID, search_mode="kg_unstructured")
+> ```
+> New projects default to `search_mode="unstructured"`. With that default, `client.search.rag(...)` silently returns zero hits even when your files are correctly loaded. This is the most common gotcha. `client.search.intelligent(...)` is not affected.
+
+---
+
+### Step 4. Ingest your file
+
+One call covers everything: upload, parsing, transcription (for audio and video), frame analysis (for video), captioning, and indexing.
+
+```python
+import time
+
+t0 = time.time()
+job = client.projects.ingest(
+    PROJECT_ID,
+    FILE_PATH,
+    wait=True,
+    on_progress=lambda j: print(f"  [{time.time()-t0:7.1f}s] status={j.status}"),
+)
+print(f"\nDONE in {time.time()-t0:.0f}s  ·  job.id={job.id}  ·  status={job.status}")
+```
+
+The `on_progress` callback prints status updates while Kurious works.
+
+**What happens inside this call:**
+
+1. Your file uploads to Kurious
+2. The pipeline auto-detects the file type
+3. For documents: text is parsed and chunked
+4. For audio and video: speech is transcribed
+5. For video: frames are analyzed and captioned
+6. Everything is indexed so you can search it
+
+**How long it takes:**
+
+| Content type | Roughly |
+|---|---|
+| Documents (PDF, DOCX, CSV, etc.) | Seconds |
+| Audio | 1 to 2 minutes per hour |
+| Video | About 9 minutes per hour (preprocess ~7 min + indexing ~80s for a 60-minute video) |
+
+You only run this once per file.
+
+---
+
+### Step 5. Search
+
+```python
+import time
+
+# Replace these with questions that match the content you loaded
+queries = [
+    "What is the main argument in this content?",
+    "What are the next steps mentioned?",
+]
+
+for q in queries:
+    print(f"\nQ: {q}")
+    t0 = time.perf_counter()
+    res = client.search.rag(PROJECT_ID, query=q, limit=5)
+    latency_ms = (time.perf_counter() - t0) * 1000
+    print(f"  -> {res.hit_count} hits in {latency_ms:.0f} ms")
+
+    for i, h in enumerate(res.hits[:3], 1):
+        score    = h.get("_score") or h.get("score")
+        text     = h.get("text") or h.get("content") or h.get("excerpt") or ""
+        url      = h.get("video_url") or h.get("source_url") or h.get("url")
+        start_ms = h.get("start_ms")
+        end_ms   = h.get("end_ms")
+        chunk_id = h.get("chunk_id") or h.get("_id")
+        preview  = str(text).replace("\n", " ")[:240]
+
+        print(f"  [{i}] score={score}  time={start_ms}-{end_ms}ms  chunk_id={chunk_id}")
+        print(f"      text: {preview}")
+        if url:
+            print(f"      url:  {url}")
+```
+
+Each hit gives you the matching text, the relevance score, a source URL, and either start and end timestamps (for video and audio) or a character range (for documents).
+
+**Spot-check the results.** For each top hit, open the cited source at the cited location and confirm the text really matches. For video, click the `url` and jump to the timestamp. For a document, open the file at the character range. Hallucinated citations are the worst failure mode and catching them here saves work later.
 
 ---
 
 ## The SDK in two commands
 
-Everything you do with Kurious uses one of these two.
+Almost everything in Kurious uses one of these two.
 
 ```mermaid
 flowchart LR
-    A["ingest()<br/>once per file"] --> B[(Project<br/>ready)]
-    B --> C["intelligent()<br/>any number of times"]
-    C --> D[Answer<br/>+ source]
+    A["ingest()<br/>once per file"] --> B[(Project ready)]
+    B --> C["search.rag()<br/>any number of times"]
+    C --> D[Hits with text,<br/>score, timestamps,<br/>source URL]
 ```
 
-### Load files
+**Load files.**
 
 ```python
-client.projects.ingest(project_id, path)
+client.projects.ingest(project_id, path, wait=True)
 ```
 
-| Input | Output | How often |
-|---|---|---|
-| A folder or a single file | Files ready to search | Once per file |
+Pass a folder or a single file. Returns a job object with `job.status` and `job.id`. Run once per file.
 
-### Ask a question
+**Search.**
 
 ```python
-client.search.intelligent(project_id=..., query="...")
+client.search.rag(project_id, query="...", limit=5)
 ```
 
-| Input | Output | How often |
+Returns hits with the matching text, scores, timestamps, and source URLs. Run as often as you want.
+
+| Method | Returns | Use when |
 |---|---|---|
-| A question in plain English | An answer plus its source | As often as you want |
-
----
-
-## Docs
-
-| | |
-|---|---|
-| API docs | https://kurious.aintropy.ai/api/docs |
-| SDK reference | Coming soon |
-| Long-form guide | See engine guide |
-
----
-
-## Examples
-
-Twelve runnable scripts in [`examples/`](examples/), each about 15 lines.
-
-| # | Script | What it shows |
-|---|---|---|
-| 01 | `01_hello_search.py` | First query |
-| 02 | `02_list_projects.py` | All sample projects |
-| 03 | `03_get_project_info.py` | Inside a project |
-| 04 | `04_search_videos.py` | Find a clip in a video |
-| 05 | `05_filter_by_date.py` | Narrow by date |
-| 06 | `06_find_a_person.py` | Mentions of a speaker |
-| 07 | `07_cross_modal.py` | Video and PDF together |
-| 08 | `08_quick_vs_deep_think.py` | Fast vs. thorough |
-| 09 | `09_compare_projects.py` | Two projects, side by side |
-| 10 | `10_show_citations.py` | All source spans |
-| 11 | `11_stream_answer.py` | Token-by-token streaming |
-| 12 | `12_see_routing_decision.py` | Which approach Kurious used |
-
-```bash
-python examples/01_hello_search.py
-```
+| `client.search.rag(...)` | Raw matching chunks with scores, timestamps, and source URLs | You want raw search hits for a custom UI or downstream code. Requires `search_mode="kg_unstructured"`. |
+| `client.search.intelligent(...)` | Written answer plus sources | You want a finished answer to show a user. Works on either search mode. |
 
 ---
 
@@ -252,29 +349,31 @@ python examples/01_hello_search.py
 <details>
 <summary><b><code>401 Unauthorized</code> on install</b></summary>
 
-Get a token from [dev.azure.com/AIntropy-DevOps](https://dev.azure.com/AIntropy-DevOps): avatar, then **Personal access tokens**, scope **Packaging (Read)**. Then:
+Your `AZURE_DEVOPS_TOKEN` is missing or wrong. Re-export it and rerun the install:
 
 ```bash
-export AZURE_DEVOPS_EXT_PAT="<your-token>"
+export AZURE_DEVOPS_TOKEN="<your PAT>"
 ```
 
-Rerun the install.
+If your PAT is being rejected, check that it has the **Packaging (Read)** scope.
 </details>
 
 <details>
-<summary><b><code>403 Forbidden</code> on a project</b></summary>
+<summary><b><code>409 Conflict</code> when signing up</b></summary>
 
-Your key is not scoped to that project. Trial keys work on sample projects only. Keys from `kurious init` work on the project they were created with.
+The email already has an account. The code in Step 2 handles this automatically: it falls back to `/auth/login`. If you copied it as-is, this should just work.
 </details>
 
 <details>
-<summary><b>New project, empty search results</b></summary>
+<summary><b>New project, <code>search.rag</code> returns zero hits</b></summary>
 
-Run once after creating the project:
+Run this once after creating the project:
 
 ```python
 client.projects.update_config(project_id, search_mode="kg_unstructured")
 ```
+
+New projects default to `search_mode="unstructured"`. The engine's project-scoped `search.rag` path only runs for `search_mode="kg_unstructured"`. Other modes return zero hits even when your files are correctly indexed. `client.search.intelligent(...)` works either way.
 </details>
 
 <details>
@@ -286,36 +385,38 @@ Check the index step:
 client.projects.get_step_timings(project_id)
 ```
 
-If `index` shows `count=0`, give it another minute.
+If `index` shows `count=0`, give it another minute on large files.
 </details>
 
 <details>
 <summary><b>Video search slow on first query</b></summary>
 
-Cold cache. Next queries are fast.
+Cold cache. The first query warms the index. Following queries are sub-second.
+
+A 60-minute video takes about 9 minutes total to fully load before search is ready.
 </details>
 
 <details>
 <summary><b>Reporting a bug</b></summary>
 
-[Open an issue](https://github.com/Kurious-AI/getting-started/issues/new), pick **Bug report**, include SDK version (`pip show aintropy`), project ID, the call, and the error.
+[Open an issue](https://github.com/Kurious-AI/getting-started/issues/new), pick **Bug report**, include SDK version (`pip show aintropy`), the project ID, the exact call you ran, and the error message.
 </details>
 
 ---
 
-## Roadmap
+## Docs
 
-New features land here next sprint.
+- **API docs:** https://kurious.aintropy.ai/api/docs
+- **SDK reference:** coming soon
+- **Long-form guide:** see the engine guide
 
 ---
 
 ## Support
 
-| Need | Where |
-|---|---|
-| Found a bug | [Open an issue](https://github.com/Kurious-AI/getting-started/issues/new) |
-| Question or show-and-tell | [Discussions](https://github.com/Kurious-AI/getting-started/discussions) or [Discord](https://discord.gg/aintropy-community) |
-| Direct help | know@aintropy.ai |
+- **Found a bug?** [Open an issue](https://github.com/Kurious-AI/getting-started/issues/new)
+- **Question or show-and-tell?** [Discussions](https://github.com/Kurious-AI/getting-started/discussions) or [Discord](https://discord.gg/aintropy-community)
+- **Direct help:** know@aintropy.ai
 
 ---
 
