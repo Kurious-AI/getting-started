@@ -26,6 +26,8 @@ Before you start, you need these four things.
 > [!NOTE]
 > No Docker. No servers. No other accounts. The SDK installs through `pip` like any other Python package.
 
+> [!TIP]
+> Kurious does not scrape websites or transcode formats. Convert your data to one of the supported formats before ingest.
 
 ---
 
@@ -113,7 +115,7 @@ Replace the four placeholders (email, password, name, company) with your own val
 > **Already have a working `client` from earlier in this session?** Skip Step 2. The same `client` object works for the rest of the tutorial.
 
 <details>
-<summary><b>Show code</b></summary>
+<summary><img src="https://img.shields.io/badge/%E2%96%B6%20Show%20Code-Click%20to%20expand-2ea44f?style=for-the-badge" alt="Show code"></summary>
 
 ```python
 import requests
@@ -282,7 +284,7 @@ You only run this once per file.
 ### Step 5 of 5. Run your first search
 
 <details>
-<summary><b>Show code</b></summary>
+<summary><img src="https://img.shields.io/badge/%E2%96%B6%20Show%20Code-Click%20to%20expand-2ea44f?style=for-the-badge" alt="Show code"></summary>
 
 ```python
 import time
@@ -357,7 +359,8 @@ Pass a folder or a single file. Returns a job object with `job.status` and `job.
 
 ## Troubleshooting & FAQ
 
-### My data isn't being ingested or scraped correctly.
+<details>
+<summary><b>My data isn't being ingested or scraped correctly.</b></summary>
 
 Kurious supports a wide range of modalities including video, sensor streams, documents, structured tables, and multimodal datasets.
 
@@ -365,7 +368,10 @@ If your data format is unusual or highly specialized, reach out and we'll help d
 
 Contact: [help@aintropy.ai](mailto:help@aintropy.ai)
 
-### My query returns no citations.
+</details>
+
+<details>
+<summary><b>My query returns no citations.</b></summary>
 
 Either the question is too broad, or the project does not contain relevant data.
 
@@ -376,7 +382,10 @@ Try narrowing the question to the modality you expect:
 
 Kurious only returns evidence-backed answers. If supporting evidence cannot be found, it will not fabricate a citation.
 
-### Where does Kurious get its data from?
+</details>
+
+<details>
+<summary><b>Where does Kurious get its data from?</b></summary>
 
 Kurious never invents knowledge. Every answer comes directly from the data sources you provide during ingestion.
 
@@ -390,21 +399,33 @@ Depending on your project, citations may point back to:
 
 Every answer remains grounded in your source material.
 
-### Where do the demo videos and legal datasets come from?
+</details>
+
+<details>
+<summary><b>Where do the demo videos and legal datasets come from?</b></summary>
 
 The demo projects included in Kurious use publicly available datasets and example content intended for evaluation and experimentation. Production deployments use customer-provided data.
 
-### `kurious init` hangs at the email step.
+</details>
+
+<details>
+<summary><b><code>kurious init</code> hangs at the email step.</b></summary>
 
 Email verification is sent through a one-time login link. Check your inbox and spam folder. If nothing arrives within five minutes, file a bug report.
 
-### My ingest is slower than expected.
+</details>
+
+<details>
+<summary><b>My ingest is slower than expected.</b></summary>
 
 Video is the most computationally intensive modality and processing time scales with duration. As a rough guideline, trial infrastructure processes approximately ten minutes of video per minute of ingest time.
 
 Builder Mode customers can request faster ingestion configurations through paid infrastructure tiers.
 
-### The trial API key is rate limited.
+</details>
+
+<details>
+<summary><b>The trial API key is rate limited.</b></summary>
 
 Yes, intentionally. Explore Mode is designed for evaluation, not production workloads.
 
@@ -416,7 +437,10 @@ kurious init
 
 to switch into Builder Mode using your own API key and higher limits.
 
-### Something is broken or behaving unexpectedly. How do I report it?
+</details>
+
+<details>
+<summary><b>Something is broken or behaving unexpectedly. How do I report it?</b></summary>
 
 Open a new issue using the Bug Report template in this repository. The template automatically captures:
 
@@ -427,6 +451,8 @@ Open a new issue using the Bug Report template in this repository. The template 
 - Actual behavior
 
 Our goal is to triage and tag all reported bugs within one business day.
+
+</details>
 
 ---
 
