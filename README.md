@@ -114,8 +114,17 @@ Replace the four placeholders (email, password, name, company) with your own val
 > [!TIP]
 > **Already have a working `client` from earlier in this session?** Skip Step 2. The same `client` object works for the rest of the tutorial.
 
+**Preview — these are the four values you will customize:**
+
+```python
+TEST_EMAIL     = "you@yourcompany.com"   # replace
+TEST_PASSWORD  = "YourStrongPassword!"   # replace
+TEST_FULL_NAME = "Your Name"             # replace
+TEST_COMPANY   = "your-company"          # replace
+```
+
 <details>
-<summary>&nbsp;<kbd>&nbsp; ▸ &nbsp;<b>Show Code</b>&nbsp; </kbd>&nbsp;</summary>
+<summary>&nbsp;<kbd>&nbsp; ▸ &nbsp;<b>Show full sign-in code</b>&nbsp; </kbd>&nbsp;</summary>
 
 ```python
 import requests
@@ -283,8 +292,17 @@ You only run this once per file.
 
 ### Step 5 of 5. Run your first search
 
+**Preview — change these to your own questions:**
+
+```python
+queries = [
+    "What is the main argument in this content?",
+    "What are the next steps mentioned?",
+]
+```
+
 <details>
-<summary>&nbsp;<kbd>&nbsp; ▸ &nbsp;<b>Show Code</b>&nbsp; </kbd>&nbsp;</summary>
+<summary>&nbsp;<kbd>&nbsp; ▸ &nbsp;<b>Show full search code</b>&nbsp; </kbd>&nbsp;</summary>
 
 ```python
 import time
