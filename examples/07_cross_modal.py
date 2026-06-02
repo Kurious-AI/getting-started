@@ -1,9 +1,10 @@
 """
-One query, both video content and structured records.
+One query, evidence from multiple file types in the same project.
 
-Cross-modal search asks a question that needs evidence from two file types at once
-— here, a council vote (video transcript) cross-referenced with a budget table
-(structured CSV). Kurious routes the relevant slice of the query to each pipeline.
+Cross-modal retrieval blends video transcripts and document text in a single
+answer when the project contains both. Useful when the question needs context
+from one modality (the recorded debate) and ground-truth from another
+(the formal agenda PDF or budget document).
 
 Run: python examples/07_cross_modal.py
 """
@@ -12,20 +13,19 @@ import os
 from aintropy import AIntropy
 
 client = AIntropy(api_key=os.environ["KURIOUS_API_KEY"])
-
-# nj-open-data has structured budget tables; louisville has council video.
-# For cross-modal in a single project, both modalities live in the same project_id.
-nj = next(p for p in client.projects.list().projects if "nj" in p.name.lower())
+louisville = next(p for p in client.projects.list().projects if "louisville" in p.name.lower())
 
 result = client.search.intelligent(
-    project_id=nj.id,
-    query="Which agencies received budget increases over 10% in 2025, and what was discussed about them in the committee hearings?",
+    project_id=louisville.id,
+    query="What did the agenda list under transportation, and what did the council actually say during the discussion?",
     mode="quick",
 )
 
 print(result.answer)
-print(f"\nUsed {len(result.sources)} sources across {len({s.filename.rsplit('.', 1)[-1] for s in result.sources})} file types")
+filetypes = {s.get("filename", "").rsplit(".", 1)[-1] for s in result.sources}
+print(f"\nGrounded across {len(filetypes)} file types: {sorted(filetypes)}")
 
 # Expected output (placeholder — capture actual after Adi ships trial key):
-# Three agencies received >10% increases in FY2025: ...
-# Used 7 sources across 2 file types
+# The transportation block of the agenda listed three items: ...
+# During the live discussion, councilmembers raised concerns about ...
+# Grounded across 2 file types: ['mp4', 'pdf']

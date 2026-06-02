@@ -1,8 +1,10 @@
 """
-Narrow a query to a specific date range.
+Narrow a query to a specific time window.
 
-Same question as example 04, but limited to Q1 2026 — useful when you want
-"what did they say last quarter" rather than "what did they ever say."
+The SDK doesn't take a structured date-filter parameter — Kurious pulls dates
+out of the source files themselves and respects date constraints encoded in
+natural language. So just say "in Q1 2026" or "between January and March 2026"
+in the question itself.
 
 Run: python examples/05_filter_by_date.py
 """
@@ -11,20 +13,22 @@ import os
 from aintropy import AIntropy
 
 client = AIntropy(api_key=os.environ["KURIOUS_API_KEY"])
-
 louisville = next(p for p in client.projects.list().projects if "louisville" in p.name.lower())
 
-# TODO(adi): confirm the date-filter kwarg shape in the SDK — using filters={...} as the placeholder
-hits = client.search.rag(
+result = client.search.intelligent(
     project_id=louisville.id,
-    query="zoning variance on Bardstown Road",
-    limit=5,
-    filters={"date_from": "2026-01-01", "date_to": "2026-03-31"},
+    query="What did the council decide about Bardstown Road zoning between January and March 2026?",
+    mode="quick",
 )
 
-for h in hits.results[:3]:
-    print(f"  {h.filename} ({getattr(h, 'date', '?')})  → {h.text[:100]}...")
+print(result.answer)
+print("\nSources cited (newest first):")
+for s in result.sources[:3]:
+    print(f"  {s.get('filename', '?')}  ({s.get('date', '?')})")
 
 # Expected output (placeholder — capture actual after Adi ships trial key):
-#   council_2026-02-13.mp4 (2026-02-13)  → "...the Bardstown variance request was deferred..."
-#   council_2026-03-06.mp4 (2026-03-06)  → "...council voted to approve the variance..."
+# In Q1 2026, the council deferred the Bardstown variance request twice before
+# approving it on March 6 with a 7-2 vote...
+# Sources cited (newest first):
+#   council_2026-03-06.mp4  (2026-03-06)
+#   council_2026-02-13.mp4  (2026-02-13)

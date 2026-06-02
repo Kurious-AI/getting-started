@@ -2,8 +2,8 @@
 After an answer, list every source chunk that grounded it.
 
 Demonstrates Kurious's citation transparency — every answer carries the exact
-source spans (file + char range or timestamp) it pulled from. Useful when you need
-to verify or quote the underlying evidence.
+source spans (file + char range or timestamp) it pulled from. Useful when you
+need to verify or quote the underlying evidence.
 
 Run: python examples/10_show_citations.py
 """
@@ -22,9 +22,12 @@ r = client.search.intelligent(
 print(r.answer, "\n")
 
 for i, s in enumerate(r.sources, 1):
-    span = f"chars {s.char_start}-{s.char_end}" if hasattr(s, "char_start") else f"@{getattr(s, 'timestamp_s', '?')}s"
-    print(f"  [{i}] {s.filename}  {span}  (score={s.score:.2f})")
-    print(f"      \"{s.text[:140]}...\"")
+    span = (
+        f"chars {s['char_start']}-{s['char_end']}" if "char_start" in s
+        else f"@{s.get('timestamp_s', '?')}s"
+    )
+    print(f"  [{i}] {s.get('filename', '?')}  {span}  (score={s.get('score', 0):.2f})")
+    print(f"      \"{s.get('text', '')[:140]}...\"")
 
 # Expected output (placeholder — capture actual after Adi ships trial key):
 # The 2025 transit budget passed 7-2 on March 14, 2025...

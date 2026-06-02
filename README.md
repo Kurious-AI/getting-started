@@ -102,7 +102,7 @@ result = client.search.intelligent(
 )
 print(result.answer)
 for s in result.sources[:3]:
-    print(f"  {s.filename} (score={s.score:.2f})")
+    print(f"  {s.get('filename', '?')} (score={s.get('score', 0):.2f})")
 ```
 
 You should get an answer plus a handful of citations back from Louisville city council recordings.
@@ -136,7 +136,7 @@ client = AIntropy(api_key=os.environ["KURIOUS_API_KEY"])
 project_id = client.projects.list().projects[0].id   # the project you just created
 
 job = client.projects.ingest(project_id, "./my-docs/", wait=True)
-print(f"Indexed {job.documents_indexed} documents in {job.elapsed_s:.0f}s")
+print(f"Ingest {job.status}")   # 'completed' on success
 
 result = client.search.intelligent(project_id=project_id, query="Your question here")
 print(result.answer)
@@ -177,6 +177,8 @@ Ten runnable scripts in [`examples/`](examples/), each demonstrating one Kurious
 | 08 | `08_quick_vs_deep_think.py` | Same query in both modes — speed vs depth tradeoff |
 | 09 | `09_compare_projects.py` | Same question against Louisville and Seattle, side by side |
 | 10 | `10_show_citations.py` | Every source chunk used to answer a query |
+| 11 | `11_stream_answer.py` | Stream the answer token-by-token (for chat UIs) |
+| 12 | `12_see_routing_decision.py` | See which pipeline Kurious picked (RAG / NL2SQL / KG) |
 
 Run any of them once you've finished Step 1:
 
@@ -223,7 +225,7 @@ Open an issue: https://github.com/Kurious-AI/getting-started/issues/new — pick
 ## Support
 
 - **Found a bug?** Open an issue: https://github.com/Kurious-AI/getting-started/issues/new
-- **Got a question or want to connect with the community?** [GitHub Discussions](https://github.com/Kurious-AI/getting-started/discussions) or [join our Discord](#) *(link placeholder — coming once the community Discord is live)*
+- **Got a question or want to connect with the community?** [GitHub Discussions](https://github.com/Kurious-AI/getting-started/discussions) or [join our Discord](https://discord.gg/aintropy-community)
 - **Need direct help?** Email know@aintropy.ai
 
 ---
