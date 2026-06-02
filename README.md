@@ -2,7 +2,9 @@
 
 # Kurious
 
-**A step-by-step tutorial: from installing the SDK to running your first search on your own files.**
+**The AI knowledge engine for Digital and Physical AI.**
+
+Cross-modal retrieval across video, sensors, documents, and structured tables. Grounded citations. Sub-second latency. One SDK call.
 
 [Quickstart](#getting-started) · [Discord](https://discord.gg/aintropy-community) · [Discussions](https://github.com/Kurious-AI/getting-started/discussions)
 
@@ -19,13 +21,13 @@ Before you start, you need these four things.
 | 1 | **Python 3.12 or newer** | Open your terminal and run `python --version`. If you do not have it, download from [python.org](https://www.python.org/downloads/). |
 | 2 | **A terminal app** | Mac: Terminal. Windows: PowerShell. Both come pre-installed. |
 | 3 | **Your Aintropy access token (PAT)** | Aintropy emails you a Personal Access Token. This is what unlocks the SDK download. |
-| 4 | **A file to retrieve inforamtion from** | Any PDF, Word doc, spreadsheet, image, audio, or video file on your computer. For video: `mp4`, `mov`, `mkv`, or `webm`. |
+| 4 | **A multimodal knowledge source** | Video, audio, documents, images, or structured tables you want Kurious to index into one queryable semantic layer. Mix freely in one project. Supported formats: `pdf`, `docx`, `txt`, `md`, `csv`, `parquet`, `png`, `jpg`, `mp3`, `wav`, `mp4`, `mov`, `mkv`, `webm`. |
 
 > [!NOTE]
 > No Docker. No servers. No other accounts. The SDK installs through `pip` like any other Python package.
 
 > [!TIP]
-> Kurious does not scrape websites or convert formats. Convert your file to one of the supported formats (`pdf`, `docx`, `txt`, `md`, `csv`, `parquet`, `png`, `jpg`, `mp3`, `wav`, `mp4`, `mov`, `mkv`, `webm`) before you start.
+> Kurious does not scrape websites or transcode formats. Convert your data to one of the supported formats before ingest.
 
 ---
 
@@ -103,17 +105,17 @@ print(f"  size: {size_mb:.1f} MB")
 
 Kurious sets up your session in three small steps:
 
-1. **Sign up** for an account (or log in if you already have one). This gets you a temporary login token called a JWT.
-2. **Exchange the JWT** for a long-lived API key.
+1. **Sign up** for an account (or log in if you already have one). This gets you a short-lived JWT.
+2. **Exchange the JWT** for a long-lived API key scoped to your company.
 3. **Build the SDK client** using the API key.
 
 Replace the four placeholders (email, password, name, company) with your own values.
 
 > [!TIP]
-> **Already have a working `client` from earlier in this session?** You can skip Step 2 entirely. The same `client` object works for the rest of the tutorial.
+> **Already have a working `client` from earlier in this session?** Skip Step 2. The same `client` object works for the rest of the tutorial.
 
 <details>
-<summary><b>Click to expand: full sign-in code (copy and replace the four placeholders)</b></summary>
+<summary><b>Show code</b></summary>
 
 ```python
 import requests
@@ -182,29 +184,29 @@ print("  client ready")
 
 </details>
 
-**What this does:** signs you in, gets your API key, and builds a `client` object you'll use for everything else. Run once per session.
+**What this does:** signs you in, mints an API key scoped to your company, and builds a `client` object you'll use for everything else. Run once per session.
 
 > [!NOTE]
-> **`409 Conflict` on signup is expected.** It just means the email already has an account. The Step 2 code handles this automatically by falling back to login. Nothing to fix.
+> **`409 Conflict` on signup is expected.** It just means the email already has an account. The Step 2 code falls back to login automatically. Nothing to fix.
 
 **The fields you can set when creating an API key:**
 
 | Field | What it means |
 |---|---|
-| `name` | A label for this key. Anything you want. |
+| `name` | A label for this key. |
 | `access_type` | `read_write` lets you upload files. `read_only` only allows searching. |
 | `max_index` | How many projects this key can access. |
 | `max_size_gb` | Total storage this key can use. |
 | `expiry_days` | How long the key stays valid. |
 
 > [!TIP]
-> **Set `max_index` and `max_size_gb` to fit your expected corpus.** At default chunking, ~1,000 hours of video lands around 100 GB of storage. Plan accordingly.
+> **Set `max_index` and `max_size_gb` to fit your expected corpus.** At default chunking, ~1,000 hours of video lands around 100 GB of storage.
 
 ---
 
 ### Step 3 of 5. Create your project
 
-A **project** is a named container for one set of files. You can have many projects, for example one for your handbook and one for your contracts. Search runs inside one project at a time.
+A **project** is a named, isolated semantic index over one set of files. You can have many projects (handbook, contracts, sensor logs). Search runs inside one project at a time.
 
 ```python
 lst = client.projects.list(skip=0, limit=50)
@@ -218,7 +220,7 @@ PROJECT_ID = project.id
 print(f"  PROJECT_ID = {PROJECT_ID}")
 ```
 
-**What this does:** asks Kurious if a project with your chosen name already exists. If yes, reuses it. If no, creates it. Saves the project ID for the next steps.
+**What this does:** reuses an existing project if one with this name already exists, otherwise creates one. Saves the project ID for the next steps.
 
 > [!IMPORTANT]
 > **Run this one extra line right after creating a new project:**
@@ -228,13 +230,13 @@ print(f"  PROJECT_ID = {PROJECT_ID}")
 > Without it, `client.search.rag(...)` returns zero results even when your files are loaded correctly. **Single most common gotcha in this tutorial.** `client.search.intelligent(...)` is not affected.
 
 > [!TIP]
-> **Search runs inside one project at a time.** To search across multiple corpora, either use one project per corpus and query each separately, or load everything into one project and filter by source at query time.
+> **Search runs inside one project at a time.** For cross-project retrieval, either query each project separately, or load every source into one project and filter by provenance at query time.
 
 ---
 
 ### Step 4 of 5. Load your file into the project
 
-One call uploads your file and gets it ready to search.
+One call uploads your file, runs every preprocessing stage your modality needs, and indexes it into the project's semantic layer.
 
 ```python
 import time
@@ -249,14 +251,14 @@ job = client.projects.ingest(
 print(f"\nDONE in {time.time()-t0:.0f}s  ·  job.id={job.id}  ·  status={job.status}")
 ```
 
-**What this does:** uploads your file, parses it, transcribes any audio or video, analyzes any video frames, and indexes everything so you can search it. The `on_progress` callback prints a live status update so you know it is still working.
+**What this does:** uploads the file, auto-detects modality, transcribes audio and video, runs frame embeddings and captioning for video, then indexes everything into the project's semantic layer. The `on_progress` callback streams status updates.
 
 **How long it takes:** A 60-minute video takes about 9 minutes total (roughly 7 minutes of preprocessing plus 80 seconds of indexing). Documents and other shorter formats are faster.
 
 You only run this once per file.
 
 > [!TIP]
-> **`status` says `completed` but search returns nothing?** Check the underlying job status directly:
+> **`status` says `completed` but search returns nothing?** Inspect the underlying job directly:
 > ```python
 > import requests
 > s = requests.get(
@@ -267,7 +269,7 @@ You only run this once per file.
 > print(f"  status            : {s.get('status')}")
 > print(f"  documents_indexed : {s.get('result', {}).get('documents_indexed')}")
 > ```
-> If `status` is `running`, give it another minute and try the search again. If `documents_indexed` is `0`, something went wrong during indexing.
+> If `status` is `running`, give it another minute. If `documents_indexed` is `0`, something went wrong during indexing.
 
 > [!TIP]
 > **Loading many files at once?** Use `wait=False` and a Python loop to dispatch jobs without blocking:
@@ -282,7 +284,7 @@ You only run this once per file.
 ### Step 5 of 5. Run your first search
 
 <details>
-<summary><b>Click to expand: full search code with formatted output</b></summary>
+<summary><b>Show code</b></summary>
 
 ```python
 import time
@@ -317,13 +319,13 @@ for q in queries:
 
 </details>
 
-**What this does:** runs your queries against the project. For each query, prints the top 3 hits: the matching text, the relevance score, the source URL, and either timestamps (for video and audio) or character ranges (for documents).
+**What this does:** runs each query against the project. For every hit, prints the matching text, the relevance score, the source URL, and either timestamps (for video and audio) or character ranges (for documents).
 
 > [!TIP]
-> **Hit field names vary by file type.** A hit's score may live at `_score`, `score`, or `relevance_score`. Text may be at `text`, `content`, or `excerpt`. URLs at `video_url`, `source_url`, `url`, or `document_url`. Always use `.get()` with fallbacks, like the code above does, so your script works across file types.
+> **Hit field names vary by modality.** Score may live at `_score`, `score`, or `relevance_score`. Text at `text`, `content`, or `excerpt`. URLs at `video_url`, `source_url`, `url`, or `document_url`. Always read with `.get()` and fallbacks so your code works across modalities.
 
 > [!IMPORTANT]
-> **Always spot-check your first results.** Click the source URL and confirm the text really matches what is at the cited location. For video, jump to the timestamp. For a document, open the file at the character range. Hallucinated citations are the worst failure mode and catching them now saves work later.
+> **Always spot-check your first results.** Open the cited source at the cited location and confirm the text matches. For video, jump to the timestamp. For a document, open the file at the character range. Grounded citations are Kurious's strongest guarantee, and verifying once at the start is how you build trust in your project.
 
 ---
 
@@ -335,7 +337,7 @@ After setup, almost everything you do uses one of these two.
 flowchart LR
     A["ingest()<br/>once per file"] --> B[(Project ready)]
     B --> C["search()<br/>any number of times"]
-    C --> D[Hits with text,<br/>score, timestamps,<br/>source URL]
+    C --> D[Cited answer<br/>with timestamps,<br/>spans, or rows]
 ```
 
 **Load files:**
@@ -351,7 +353,82 @@ Pass a folder or a single file. Returns a job object with `job.status` and `job.
 | Method | Returns | Use when |
 |---|---|---|
 | `client.search.rag(...)` | Raw matching chunks with scores, timestamps, and source URLs | You want raw hits for a custom UI or downstream code. Requires `search_mode="kg_unstructured"`. |
-| `client.search.intelligent(...)` | Written answer plus sources | You want a finished answer to show a user. Works on either search mode. |
+| `client.search.intelligent(...)` | Written answer plus cited sources | You want a finished, grounded answer to surface to a user. Works on either search mode. |
+
+---
+
+## Troubleshooting & FAQ
+
+### My data isn't being ingested or scraped correctly.
+
+Kurious supports a wide range of modalities including video, sensor streams, documents, structured tables, and multimodal datasets.
+
+If your data format is unusual or highly specialized, reach out and we'll help determine the best ingestion path.
+
+Contact: [help@aintropy.ai](mailto:help@aintropy.ai)
+
+### My query returns no citations.
+
+Either the question is too broad, or the project does not contain relevant data.
+
+Try narrowing the question to the modality you expect:
+
+- *"in the video footage, when did..."*
+- *"in the sensor logs, where did..."*
+
+Kurious only returns evidence-backed answers. If supporting evidence cannot be found, it will not fabricate a citation.
+
+### Where does Kurious get its data from?
+
+Kurious never invents knowledge. Every answer comes directly from the data sources you provide during ingestion.
+
+Depending on your project, citations may point back to:
+
+- Video timestamps
+- Sensor events
+- Robot logs
+- Document passages
+- Structured table rows
+
+Every answer remains grounded in your source material.
+
+### Where do the demo videos and legal datasets come from?
+
+The demo projects included in Kurious use publicly available datasets and example content intended for evaluation and experimentation. Production deployments use customer-provided data.
+
+### `kurious init` hangs at the email step.
+
+Email verification is sent through a one-time login link. Check your inbox and spam folder. If nothing arrives within five minutes, file a bug report.
+
+### My ingest is slower than expected.
+
+Video is the most computationally intensive modality and processing time scales with duration. As a rough guideline, trial infrastructure processes approximately ten minutes of video per minute of ingest time.
+
+Builder Mode customers can request faster ingestion configurations through paid infrastructure tiers.
+
+### The trial API key is rate limited.
+
+Yes, intentionally. Explore Mode is designed for evaluation, not production workloads.
+
+If you hit limits, run:
+
+```bash
+kurious init
+```
+
+to switch into Builder Mode using your own API key and higher limits.
+
+### Something is broken or behaving unexpectedly. How do I report it?
+
+Open a new issue using the Bug Report template in this repository. The template automatically captures:
+
+- SDK version
+- Modality
+- Request details
+- Expected behavior
+- Actual behavior
+
+Our goal is to triage and tag all reported bugs within one business day.
 
 ---
 
