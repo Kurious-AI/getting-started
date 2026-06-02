@@ -1,0 +1,8 @@
+# Code Owners for Kurious-AI/getting-started
+#
+# All PRs require review from listed owners before merging.
+# GitHub auto-assigns the matching owner(s) as required reviewers
+# when a PR is opened.
+
+# Default owner — every change in this repo requires Shivangi's approval
+* @shivangibuilds
