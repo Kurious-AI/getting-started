@@ -155,7 +155,7 @@ TEST_COMPANY   = "your-company"          # replace
 ```
 
 <details>
-<summary>&nbsp;<kbd>&nbsp; ▸ &nbsp;<b>Show full sign-in code</b> &nbsp;<sub>signup → JWT → API key → SDK client · ~55 lines</sub>&nbsp; </kbd>&nbsp;</summary>
+<summary><b>Show full sign-in code</b> &nbsp;<sub>signup → JWT → API key → SDK client · ~55 lines</sub></summary>
 
 <br>
 
@@ -341,7 +341,7 @@ queries = [
 ```
 
 <details>
-<summary>&nbsp;<kbd>&nbsp; ▸ &nbsp;<b>Show full search code</b> &nbsp;<sub>rag query + formatted output loop · ~25 lines</sub>&nbsp; </kbd>&nbsp;</summary>
+<summary><b>Show full search code</b> &nbsp;<sub>rag query + formatted output loop · ~25 lines</sub></summary>
 
 <br>
 
