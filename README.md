@@ -158,20 +158,6 @@ Behind the scenes this is three calls: a `signup`/`login` for a short-lived JWT,
 > [!TIP]
 > Already have a working `client` from earlier in this session? Skip Step 2. The same object works for the rest of the tutorial.
 
-**Preview — the four values you will customize:**
-
-```python
-TEST_EMAIL     = "you@yourcompany.com"   # replace
-TEST_PASSWORD  = "YourStrongPassword!"   # replace
-TEST_FULL_NAME = "Your Name"             # replace
-TEST_COMPANY   = "your-company"          # replace
-```
-
-<details>
-<summary><b>Show full code</b></summary>
-
-<br>
-
 ```python
 import requests
 from aintropy import AIntropy
@@ -236,8 +222,6 @@ def _with_cid(extra=None, _o=_orig, _c=company_id, **kw):
 client._transport._build_headers = _with_cid
 print("  client ready")
 ```
-
-</details>
 
 > [!NOTE]
 > **`409 Conflict` on signup is expected.** It just means the email already has an account. The Step 2 code falls back to login automatically. Nothing to fix.
@@ -344,20 +328,6 @@ A 60-minute video takes about 9 minutes total (roughly 7 minutes of preprocessin
 
 **Goal:** ask a natural-language question and get back grounded hits with timestamps, character ranges, and source URLs.
 
-**Preview — change these to your own questions:**
-
-```python
-queries = [
-    "What is the main argument in this content?",
-    "What are the next steps mentioned?",
-]
-```
-
-<details>
-<summary><b>Show full code</b></summary>
-
-<br>
-
 ```python
 import time
 
@@ -387,8 +357,6 @@ for q in queries:
         if url:
             print(f"      url:  {url}")
 ```
-
-</details>
 
 For every hit, you'll see the matching text, the relevance score, the source URL, and either timestamps (for video and audio) or character ranges (for documents).
 
