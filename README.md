@@ -26,8 +26,6 @@ Before you start, you need these four things.
 > [!NOTE]
 > No Docker. No servers. No other accounts. The SDK installs through `pip` like any other Python package.
 
-> [!TIP]
-> Kurious does not scrape websites or transcode formats. Convert your data to one of the supported formats before ingest.
 
 ---
 
