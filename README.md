@@ -115,7 +115,7 @@ Replace the four placeholders (email, password, name, company) with your own val
 > **Already have a working `client` from earlier in this session?** Skip Step 2. The same `client` object works for the rest of the tutorial.
 
 <details>
-<summary><img src="https://img.shields.io/badge/%E2%96%B6%20Show%20Code-Click%20to%20expand-2ea44f?style=for-the-badge" alt="Show code"></summary>
+<summary>&nbsp;<kbd>&nbsp; ▸ &nbsp;<b>Show Code</b>&nbsp; </kbd>&nbsp;</summary>
 
 ```python
 import requests
@@ -284,7 +284,7 @@ You only run this once per file.
 ### Step 5 of 5. Run your first search
 
 <details>
-<summary><img src="https://img.shields.io/badge/%E2%96%B6%20Show%20Code-Click%20to%20expand-2ea44f?style=for-the-badge" alt="Show code"></summary>
+<summary>&nbsp;<kbd>&nbsp; ▸ &nbsp;<b>Show Code</b>&nbsp; </kbd>&nbsp;</summary>
 
 ```python
 import time
