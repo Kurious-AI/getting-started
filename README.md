@@ -24,6 +24,9 @@ Before you start, you need these four things.
 > [!NOTE]
 > No Docker. No servers. No other accounts. The SDK installs through `pip` like any other Python package.
 
+> [!TIP]
+> Kurious does not scrape websites or convert formats. Convert your file to one of the supported formats (`pdf`, `docx`, `txt`, `md`, `csv`, `parquet`, `png`, `jpg`, `mp3`, `wav`, `mp4`, `mov`, `mkv`, `webm`) before you start.
+
 ---
 
 ## Install the SDK
@@ -58,7 +61,10 @@ pip install jupyter requests
 python -c "import aintropy; print(aintropy.__version__)"
 ```
 
-You should see `0.5.5` printed. If you do, you are ready for the next section.
+You should see `0.5.5` printed.
+
+> [!WARNING]
+> **Hit `401 Unauthorized`?** Your `AZURE_DEVOPS_TOKEN` is missing or wrong. Re-export it and rerun the install. If the token is still rejected, check that it has the **Packaging (Read)** scope.
 
 ---
 
@@ -89,19 +95,22 @@ print(f"  file: {FILE_PATH}")
 print(f"  size: {size_mb:.1f} MB")
 ```
 
-**What this does:** points Python at your file, confirms it actually exists, and prints its size. If you get an `AssertionError`, the path is wrong, fix it and rerun.
+**What this does:** points Python at your file, confirms it exists, and prints its size. If you see an `AssertionError`, the path is wrong, fix it and rerun.
 
 ---
 
 ### Step 2 of 5. Sign in and get an API key
 
-Kurious uses three small steps to set up your session:
+Kurious sets up your session in three small steps:
 
 1. **Sign up** for an account (or log in if you already have one). This gets you a temporary login token called a JWT.
 2. **Exchange the JWT** for a long-lived API key.
 3. **Build the SDK client** using the API key.
 
 Replace the four placeholders (email, password, name, company) with your own values.
+
+> [!TIP]
+> **Already have a working `client` from earlier in this session?** You can skip Step 2 entirely. The same `client` object works for the rest of the tutorial.
 
 <details>
 <summary><b>Click to expand: full sign-in code (copy and replace the four placeholders)</b></summary>
@@ -173,7 +182,10 @@ print("  client ready")
 
 </details>
 
-**What this does:** signs you in, gets your API key, and builds a `client` object you'll use for everything else. Run this once per session.
+**What this does:** signs you in, gets your API key, and builds a `client` object you'll use for everything else. Run once per session.
+
+> [!NOTE]
+> **`409 Conflict` on signup is expected.** It just means the email already has an account. The Step 2 code handles this automatically by falling back to login. Nothing to fix.
 
 **The fields you can set when creating an API key:**
 
@@ -184,6 +196,9 @@ print("  client ready")
 | `max_index` | How many projects this key can access. |
 | `max_size_gb` | Total storage this key can use. |
 | `expiry_days` | How long the key stays valid. |
+
+> [!TIP]
+> **Set `max_index` and `max_size_gb` to fit your expected corpus.** At default chunking, ~1,000 hours of video lands around 100 GB of storage. Plan accordingly.
 
 ---
 
@@ -203,14 +218,17 @@ PROJECT_ID = project.id
 print(f"  PROJECT_ID = {PROJECT_ID}")
 ```
 
-**What this does:** asks Kurious if a project with your chosen name already exists. If yes, reuses it. If no, creates it. Then saves the project ID for the next steps.
+**What this does:** asks Kurious if a project with your chosen name already exists. If yes, reuses it. If no, creates it. Saves the project ID for the next steps.
 
 > [!IMPORTANT]
 > **Run this one extra line right after creating a new project:**
 > ```python
 > client.projects.update_config(PROJECT_ID, search_mode="kg_unstructured")
 > ```
-> Without it, `client.search.rag(...)` returns zero results even when your files are loaded correctly. Most common gotcha in the tutorial. `client.search.intelligent(...)` is not affected.
+> Without it, `client.search.rag(...)` returns zero results even when your files are loaded correctly. **Single most common gotcha in this tutorial.** `client.search.intelligent(...)` is not affected.
+
+> [!TIP]
+> **Search runs inside one project at a time.** To search across multiple corpora, either use one project per corpus and query each separately, or load everything into one project and filter by source at query time.
 
 ---
 
@@ -231,17 +249,33 @@ job = client.projects.ingest(
 print(f"\nDONE in {time.time()-t0:.0f}s  ·  job.id={job.id}  ·  status={job.status}")
 ```
 
-**What this does:** uploads your file, parses it, transcribes any audio or video, analyzes any video frames, and indexes everything. The `on_progress` callback prints a live status update so you know it is still working.
+**What this does:** uploads your file, parses it, transcribes any audio or video, analyzes any video frames, and indexes everything so you can search it. The `on_progress` callback prints a live status update so you know it is still working.
 
-**How long it takes:**
-
-| Content type | Roughly |
-|---|---|
-| Documents (PDF, DOCX, CSV, etc.) | Seconds |
-| Audio | 1 to 2 minutes per hour of audio |
-| Video | About 9 minutes per hour of video |
+**How long it takes:** A 60-minute video takes about 9 minutes total (roughly 7 minutes of preprocessing plus 80 seconds of indexing). Documents and other shorter formats are faster.
 
 You only run this once per file.
+
+> [!TIP]
+> **`status` says `completed` but search returns nothing?** Check the underlying job status directly:
+> ```python
+> import requests
+> s = requests.get(
+>     f"{BASE_URL}/jobs/{job.id}",
+>     headers=client._transport._build_headers(),
+>     timeout=15,
+> ).json()
+> print(f"  status            : {s.get('status')}")
+> print(f"  documents_indexed : {s.get('result', {}).get('documents_indexed')}")
+> ```
+> If `status` is `running`, give it another minute and try the search again. If `documents_indexed` is `0`, something went wrong during indexing.
+
+> [!TIP]
+> **Loading many files at once?** Use `wait=False` and a Python loop to dispatch jobs without blocking:
+> ```python
+> jobs = [client.projects.ingest(PROJECT_ID, path, wait=False) for path in paths]
+> # then poll for completion
+> ```
+> Concurrent ingests share GPU capacity on the backend, so even parallel calls will run partly serially.
 
 ---
 
@@ -285,8 +319,11 @@ for q in queries:
 
 **What this does:** runs your queries against the project. For each query, prints the top 3 hits: the matching text, the relevance score, the source URL, and either timestamps (for video and audio) or character ranges (for documents).
 
+> [!TIP]
+> **Hit field names vary by file type.** A hit's score may live at `_score`, `score`, or `relevance_score`. Text may be at `text`, `content`, or `excerpt`. URLs at `video_url`, `source_url`, `url`, or `document_url`. Always use `.get()` with fallbacks, like the code above does, so your script works across file types.
+
 > [!IMPORTANT]
-> **Always spot-check your first results.** Click the source URL and confirm the text really matches what is at the cited location. Hallucinated citations are the worst failure mode and catching them now saves work later.
+> **Always spot-check your first results.** Click the source URL and confirm the text really matches what is at the cited location. For video, jump to the timestamp. For a document, open the file at the character range. Hallucinated citations are the worst failure mode and catching them now saves work later.
 
 ---
 
@@ -318,53 +355,6 @@ Pass a folder or a single file. Returns a job object with `job.status` and `job.
 
 ---
 
-## Tips & gotchas
-
-Things worth knowing before you hit them.
-
-> [!WARNING]
-> **`401 Unauthorized` during install.** Your `AZURE_DEVOPS_TOKEN` is missing or wrong. Re-export it and rerun the install command. If your token is still rejected, check that it has the **Packaging (Read)** scope.
-
-> [!NOTE]
-> **`409 Conflict` during signup is expected.** It just means the email already has an account. The Step 2 code handles this automatically by falling back to login. Nothing to fix.
-
-> [!IMPORTANT]
-> **Always run `update_config` on a fresh project.** New projects default to `search_mode="unstructured"`, with which `client.search.rag(...)` silently returns zero hits. The one-line fix:
-> ```python
-> client.projects.update_config(project_id, search_mode="kg_unstructured")
-> ```
-> This is the single most common gotcha. `client.search.intelligent(...)` is not affected.
-
-> [!TIP]
-> **Search hit field names vary by file type.** A hit's score may live at `_score`, `score`, or `relevance_score`. Text may be at `text`, `content`, or `excerpt`. URLs at `video_url`, `source_url`, `url`, or `document_url`. Always use `.get()` with fallbacks, like the Step 5 code does, so your script works across file types.
-
-> [!NOTE]
-> **First video query is slow, the rest are fast.** The first query warms the index. Following queries are sub-second. A 60-minute video also takes about 9 minutes to fully load before any search is ready.
-
-> [!TIP]
-> **"Ingest completed" but search returns empty?** The index might still be propagating. Check it with:
-> ```python
-> client.projects.get_step_timings(project_id)
-> ```
-> If `index` shows `count=0`, give it another minute and try again.
-
-> [!TIP]
-> **Kurious does not scrape or convert.** Make sure your file is already in a supported format (`pdf`, `docx`, `txt`, `md`, `csv`, `parquet`, `png`, `jpg`, `mp3`, `wav`, `mp4`, `mov`, `mkv`, `webm`) before ingesting.
-
-> [!TIP]
-> **Search runs inside one project at a time.** To search across multiple corpora, either use one project per corpus and query each separately, or load everything into one project and filter at query time.
-
-> [!TIP]
-> **Bulk-ingesting many files?** Use `wait=False` in `ingest()` and a Python loop to fan jobs out, then poll for completion. Concurrent ingests share GPU capacity on the backend, so even parallel calls will run partly serially. Plan capacity accordingly.
-
-> [!TIP]
-> **Set API key quotas to fit your corpus.** When you create an API key, `max_index` is the number of projects this key can access and `max_size_gb` is the total storage. Plan for the size of your corpus.
-
-> [!NOTE]
-> **Reporting a bug.** [Open an issue](https://github.com/Kurious-AI/getting-started/issues/new), pick **Bug report**, and include your SDK version (`pip show aintropy`), the project ID, the exact call you ran, and the error message.
-
----
-
 ## Docs
 
 - **API docs:** https://kurious.aintropy.ai/api/docs
@@ -375,7 +365,7 @@ Things worth knowing before you hit them.
 
 ## Support
 
-- **Found a bug?** [Open an issue](https://github.com/Kurious-AI/getting-started/issues/new)
+- **Found a bug?** [Open an issue](https://github.com/Kurious-AI/getting-started/issues/new), pick **Bug report**, and include your SDK version (`pip show aintropy`), the project ID, the exact call you ran, and the error message.
 - **Question or show-and-tell?** [Discussions](https://github.com/Kurious-AI/getting-started/discussions) or [Discord](https://discord.gg/aintropy-community)
 - **Direct help:** know@aintropy.ai
 
