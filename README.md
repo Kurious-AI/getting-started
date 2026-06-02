@@ -19,7 +19,7 @@ Before you start, you need these four things.
 | 1 | **Python 3.12 or newer** | Open your terminal and run `python --version`. If you do not have it, download from [python.org](https://www.python.org/downloads/). |
 | 2 | **A terminal app** | Mac: Terminal. Windows: PowerShell. Both come pre-installed. |
 | 3 | **Your Aintropy access token (PAT)** | Aintropy emails you a Personal Access Token. This is what unlocks the SDK download. |
-| 4 | **A file to search** | Any PDF, Word doc, spreadsheet, image, audio, or video file on your computer. For video: `mp4`, `mov`, `mkv`, or `webm`. |
+| 4 | **A file to retrieve inforamtion from** | Any PDF, Word doc, spreadsheet, image, audio, or video file on your computer. For video: `mp4`, `mov`, `mkv`, or `webm`. |
 
 > [!NOTE]
 > No Docker. No servers. No other accounts. The SDK installs through `pip` like any other Python package.
