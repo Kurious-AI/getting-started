@@ -108,8 +108,21 @@ Expected output: `0.5.5`
 Five steps from zero to a working search.
 
 ```mermaid
+%%{init: {'flowchart': {'curve': 'basis', 'nodeSpacing': 40, 'rankSpacing': 60}}}%%
 flowchart LR
-    A[1<br/>Pick a file] --> B[2<br/>Sign in +<br/>get API key] --> C[3<br/>Create<br/>a project] --> D[4<br/>Load<br/>your file] --> E[5<br/>Search]
+    A(["<b>1</b><br/>Pick a file"])
+    B(["<b>2</b><br/>Sign in"])
+    C(["<b>3</b><br/>Create project"])
+    D(["<b>4</b><br/>Load file"])
+    E(["<b>5</b><br/>Search"])
+
+    A --> B --> C --> D --> E
+
+    classDef step fill:#0969da,stroke:#0969da,color:#ffffff,stroke-width:2px
+    classDef finish fill:#2da44e,stroke:#2da44e,color:#ffffff,stroke-width:2px
+    class A,B,C,D step
+    class E finish
+    linkStyle default stroke:#8b949e,stroke-width:2px
 ```
 
 <br>
@@ -155,7 +168,7 @@ TEST_COMPANY   = "your-company"          # replace
 ```
 
 <details>
-<summary><b>Show full sign-in code</b> &nbsp;<sub>signup → JWT → API key → SDK client · ~55 lines</sub></summary>
+<summary><b>Show full code</b></summary>
 
 <br>
 
@@ -341,7 +354,7 @@ queries = [
 ```
 
 <details>
-<summary><b>Show full search code</b> &nbsp;<sub>rag query + formatted output loop · ~25 lines</sub></summary>
+<summary><b>Show full code</b></summary>
 
 <br>
 
@@ -394,10 +407,22 @@ For every hit, you'll see the matching text, the relevance score, the source URL
 After setup, almost everything you do uses one of these two.
 
 ```mermaid
+%%{init: {'flowchart': {'curve': 'basis', 'nodeSpacing': 40, 'rankSpacing': 60}}}%%
 flowchart LR
-    A["ingest()<br/>once per file"] --> B[(Project ready)]
-    B --> C["search()<br/>any number of times"]
-    C --> D[Cited answer<br/>with timestamps,<br/>spans, or rows]
+    A(["<b>ingest&#40;&#41;</b><br/>once per file"])
+    B[("Project<br/>ready")]
+    C(["<b>search&#40;&#41;</b><br/>any number of times"])
+    D(["<b>Cited answer</b><br/>timestamps, spans, rows"])
+
+    A --> B --> C --> D
+
+    classDef cmd fill:#0969da,stroke:#0969da,color:#ffffff,stroke-width:2px
+    classDef state fill:#bf8700,stroke:#bf8700,color:#ffffff,stroke-width:2px
+    classDef result fill:#2da44e,stroke:#2da44e,color:#ffffff,stroke-width:2px
+    class A,C cmd
+    class B state
+    class D result
+    linkStyle default stroke:#8b949e,stroke-width:2px
 ```
 
 #### Load files
