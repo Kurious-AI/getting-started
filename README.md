@@ -14,6 +14,18 @@ Video, sensors, documents — cited answers in under a second.
 
 </div>
 
+```python
+from aintropy import AIntropy
+
+client = AIntropy(api_key="ak_...")
+project = client.projects.create(name="My Project")
+
+client.projects.ingest(project.id, "footage.mp4", wait=True)
+
+result = client.search.intelligent(project.id, query="What are the key findings?")
+print(result.answer)
+```
+
 ---
 
 ## Introduction
