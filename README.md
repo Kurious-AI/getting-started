@@ -53,20 +53,13 @@ This repo is your starting point. Wire Kurious into your own data in minutes (Bu
 
 ## Why Kurious
 
-**One semantic layer over every modality.**  
-Video, sensors, documents, structured tables — ingested through one Python SDK. No stitching Whisper to LangChain to Pinecone to your own glue code.
-
-**Cited answers, not vibes.**  
-Every response points back to the exact source moment, page, or row in your data. If Kurious cannot find supporting evidence, it says so rather than fabricating.
-
-**Fast and cheap, not "fast or cheap".**  
-Designed for sub-second query latency at production cost. We publish accuracy, latency, and cost numbers on our public benchmark dashboard — no hidden trade-offs.
-
-**Cross-modal retrieval out of the box.**  
-Ask a text question against a video. Ask a sensor question against a paper. The retrieval layer is multi-sensory by design, not bolted on top of single-modal RAG.
-
-**Built for Physical AI as a first-class citizen.**  
-Sensor streams, robot logs, and world-model data are not afterthoughts. They are core to how we built ingestion and retrieval — the same engine powers Digital and Physical AI use cases.
+| | |
+|---|---|
+| **One SDK, every modality** | Video, sensors, documents, tables — no stitching Whisper to LangChain to Pinecone. |
+| **Cited answers, not vibes** | Every response points to the exact source moment, page, or row. No fabrication. |
+| **Fast and cheap** | Sub-second query latency at production cost. Numbers on our public benchmark dashboard. |
+| **Cross-modal retrieval** | Ask a text question against a video. Ask a sensor question against a paper. |
+| **Physical AI first-class** | Sensor streams and robot logs are core to the engine, not bolted on. |
 
 ---
 
