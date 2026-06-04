@@ -273,15 +273,10 @@ Open a new issue using the Bug report template in this repo. It auto-prompts for
 
 ---
 
-## Roadmap
-
-> **[TBD — to be updated next sprint]**
-
----
-
 ## Support
 
-> **[TBD — Shivangi to update with GitHub Issues, GitHub Discussions, Discord, know@aintropy.ai]**
+- **Bug reports:** [Open an issue](https://github.com/Kurious-AI/getting-started/issues/new/choose) — the bug report template prompts for everything we need.
+- **Email:** know@aintropy.ai
 
 ---
 
