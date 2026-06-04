@@ -67,9 +67,9 @@ Kurious is the AI knowledge engine that handles the messy work of multi-modal re
 
 | Beta | Domain | Try it |
 |------|--------|--------|
-| NJ Open Data | Public records, NJ municipal data | [Live demo →][URL TBD — prod URL needed] |
-| Legal Videos | Legal depositions, video evidence | [Live demo →][URL TBD — prod URL needed] |
-| chemRAG | Chemistry papers, lab notes | [Live demo →][URL TBD] |
+| NJ Open Data | Public records, NJ municipal data | Coming soon |
+| Legal Videos | Legal depositions, video evidence | Coming soon |
+| chemRAG | Chemistry papers, lab notes | Coming soon |
 | Skyfire | Drone footage and telemetry intelligence | Upcoming beta |
 | Louisville | City infrastructure data | Upcoming beta |
 | Enquire | (in development) | Upcoming beta |
