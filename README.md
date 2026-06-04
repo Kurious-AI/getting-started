@@ -1,6 +1,6 @@
 <div align="center">
 
-[![AIntropy](assets/logo.png)](https://aintropy.ai)
+<a href="https://aintropy.ai"><img src="assets/logo.png" width="120" alt="AIntropy" /></a>
 
 # Kurious
 
