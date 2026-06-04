@@ -9,6 +9,8 @@ Video, sensors, documents — cited answers in under a second.
 ![SDK](https://img.shields.io/badge/aintropy-0.5.5-2ea44f?style=flat)
 ![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat)
 ![Status](https://img.shields.io/badge/status-beta-orange?style=flat)
+[![Discord](https://img.shields.io/badge/Discord-join-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/aintropy-community)
+[![GitHub Discussions](https://img.shields.io/badge/GitHub-discussions-181717?style=flat&logo=github)](https://github.com/Kurious-AI/getting-started/discussions)
 
 [Quickstart](#getting-started) · [Discord](https://discord.gg/aintropy-community) · [Discussions](https://github.com/Kurious-AI/getting-started/discussions) · [Issues](https://github.com/Kurious-AI/getting-started/issues)
 
