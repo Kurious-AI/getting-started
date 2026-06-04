@@ -243,15 +243,56 @@ for h in hits.hits:
 ## Troubleshooting & FAQ
 
 <details>
-<summary><b>My query returns no citations.</b></summary>
+<summary><b>The SDK threw a TimeoutError during ingest. Did my job fail?</b></summary>
 <br>
-Either the question is too broad, or the project does not contain relevant data. Try narrowing to the modality you expect — for example: "in the video footage, when did..." or "in the sensor logs, where did...". Kurious only returns evidence-backed answers and will not fabricate a citation.
+No. <code>TimeoutError</code> is a client-side timeout — your backend job is still running. The file is still being processed on the server. Wait a few minutes, then check status:
+
+```python
+files = client.files.list(PROJECT_ID)
+for f in files.files:
+    print(f.filename, f.status)
+```
+
+Do not re-ingest. Once status shows <code>indexed</code>, run your search.
 </details>
 
 <details>
-<summary><b>My ingest is slower than expected.</b></summary>
+<summary><b>Ingest completed but search returns 0 sources.</b></summary>
 <br>
-Video is the most computationally intensive modality and scales with duration. Roughly one minute of processing per ten minutes of video on the trial cluster. If you need faster ingest, contact us at know@aintropy.ai.
+Two likely causes:
+
+1. **Indexing lag** — indexing runs after preprocessing finishes. Wait 1–2 minutes after ingest completes, then search again.
+2. **Missing update_config** — if you skipped this step after creating the project, `search.rag()` will always return empty. Run:
+
+```python
+client.projects.update_config(PROJECT_ID, search_mode="kg_unstructured")
+```
+
+Then search again.
+</details>
+
+<details>
+<summary><b>Search returned 0 results immediately after ingest timed out.</b></summary>
+<br>
+If you set a <code>timeout_s</code> and the SDK timed out, your file may still be ingesting on the backend — the job did not fail, it just kept running after the client disconnected. Check <code>client.files.list(PROJECT_ID)</code>. If status is <code>ingesting</code>, wait for it to reach <code>indexed</code> before searching.
+</details>
+
+<details>
+<summary><b>My on_progress callback shows stage=None the whole time.</b></summary>
+<br>
+Known limitation — pipeline stage visibility is not yet surfaced in the SDK response. Your job is still running. Monitor wall-clock time rather than stage output.
+</details>
+
+<details>
+<summary><b>How long does ingest take?</b></summary>
+<br>
+It depends on the modality:
+
+- **Video:** roughly 1 minute of processing per 10 minutes of footage. A 100 MB file (~10 min) takes 15–40 minutes on the trial cluster.
+- **Documents (PDF, DOCX, TXT):** seconds to a few minutes depending on size.
+- **Images and structured data:** seconds.
+
+You only need to ingest each file once.
 </details>
 
 <details>
@@ -263,13 +304,13 @@ Trial keys are intentionally rate-limited for evaluation, not production workloa
 <details>
 <summary><b>Where does Kurious get its data from?</b></summary>
 <br>
-Kurious never invents knowledge. Every answer comes directly from the data sources you provide during ingestion — video timestamps, sensor events, document passages, or structured table rows.
+Kurious never invents knowledge. Every answer comes directly from the data sources you provide during ingestion — video timestamps, sensor events, document passages, or structured table rows. If the evidence is not in your data, Kurious says so.
 </details>
 
 <details>
 <summary><b>Something is broken. How do I report it?</b></summary>
 <br>
-Open a new issue using the Bug report template in this repo. It auto-prompts for SDK version, modality, the call you made, and what you saw vs expected. We aim to triage every bug within one business day.
+Open a new issue using the Bug report template in this repo. It prompts for SDK version, modality, the exact call you made, and what you saw vs expected. We aim to triage every bug within one business day.
 </details>
 
 ---
