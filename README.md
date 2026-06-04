@@ -30,11 +30,7 @@ print(result.answer)
 
 ## Introduction
 
-Kurious is the AI knowledge engine that handles the messy work of multi-modal retrieval so you do not have to. Point the Python SDK at your data — video, sensor streams, document corpora, structured tables — and ask any question in natural language. You get back answers grounded in your source material, with every claim cited to the exact moment, page, or row it came from.
-
-This repo is your starting point. Wire Kurious into your own data in minutes (Builder Mode).
-
-> **Play Mode** (gate-free, no signup) — coming soon. [TBD — pending alignment]
+Kurious is the AI knowledge engine that handles the messy work of multi-modal retrieval so you do not have to. Point the SDK at your data, ask a question in plain English, get a cited answer. This repo gets you there in minutes.
 
 ---
 
