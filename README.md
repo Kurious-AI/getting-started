@@ -44,7 +44,6 @@ Kurious is the AI knowledge engine that handles the messy work of multi-modal re
 - [Getting started — Builder Mode](#getting-started)
 - [SDK reference](#sdk-reference)
 - [Troubleshooting & FAQ](#troubleshooting--faq)
-- [Roadmap](#roadmap)
 - [Support](#support)
 
 ---
@@ -117,7 +116,7 @@ flowchart LR
     linkStyle default stroke:#8b949e,stroke-width:2px
 ```
 
-> **Play Mode** — want to try Kurious without signing up first? Coming soon. [TBD — placeholder]
+> **Play Mode** — want to try Kurious without signing up first? Coming soon.
 
 ---
 
