@@ -1,5 +1,7 @@
 <div align="center">
 
+[![AIntropy](assets/logo.png)](https://aintropy.ai)
+
 # Kurious
 
 **The AI knowledge engine for digital and physical AI.**  
