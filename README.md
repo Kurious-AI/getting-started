@@ -131,11 +131,18 @@ flowchart LR
 
 **Goal:** tell Python where the file you want to index lives on disk.
 
+Kurious is built for the kinds of unstructured, multimodal data that traditional RAG stacks struggle with. Pick the one closest to what you actually work with:
+
 ```python
 import os
 
-FILE_PATH    = os.path.expanduser("~/Desktop/my_video.mp4")   # replace
-PROJECT_NAME = "my-first-project"                              # replace
+# Point at any one Kurious-shaped file. A few representative examples:
+#   ~/data/drone-survey-2026-03.mp4            (aerial drone footage)
+#   ~/data/hearing-state-v-roe.mp4             (legal hearing recording)
+#   ~/data/turbine-borescope-run-14.mp4        (industrial inspection video)
+#   ~/data/rover-sensor-logs-day-3.parquet     (multimodal sensor log)
+FILE_PATH    = os.path.expanduser("~/data/drone-survey-2026-03.mp4")  # replace
+PROJECT_NAME = "my-first-project"                                      # replace
 
 assert os.path.isfile(FILE_PATH), f"FILE_PATH does not exist: {FILE_PATH}"
 size_mb = os.path.getsize(FILE_PATH) / (1024 * 1024)
@@ -162,8 +169,10 @@ Behind the scenes this is three calls: a `signup`/`login` for a short-lived JWT,
 import requests
 from aintropy import AIntropy
 
-BASE_URL  = "https://kurious-backend-dev-api.centralus.cloudapp.azure.com/api/v1"
-USERS_URL = "https://kurious-backend-dev-api.centralus.cloudapp.azure.com/users"
+# Replace {your-cluster-url} with the cluster URL you received when you signed up.
+# You'll find it in your Aintropy welcome email, or in the dashboard under Settings > API access.
+BASE_URL  = "https://{your-cluster-url}/api/v1"
+USERS_URL = "https://{your-cluster-url}/users"
 
 TEST_EMAIL     = "you@yourcompany.com"   # replace
 TEST_PASSWORD  = "YourStrongPassword!"   # replace
@@ -212,14 +221,8 @@ k = r.json()
 api_key, company_id = k["api_key"], k["company_id"]
 print(f"  API key: {api_key[:12]}... company={company_id}")
 
-# Build the SDK client and attach your company ID to every request
+# Build the SDK client
 client = AIntropy(api_key=api_key, base_url=BASE_URL)
-_orig = client._transport._build_headers
-def _with_cid(extra=None, _o=_orig, _c=company_id, **kw):
-    h = _o(extra, **kw)
-    h.setdefault("X-Company-ID", _c)
-    return h
-client._transport._build_headers = _with_cid
 print("  client ready")
 ```
 
@@ -332,8 +335,12 @@ A 60-minute video takes about 9 minutes total (roughly 7 minutes of preprocessin
 import time
 
 queries = [
-    "What is the main argument in this content?",
-    "What are the next steps mentioned?",
+    # Cross-modal retrieval: pull evidence from video and structured logs in one query
+    "Where do the sensor logs and the drone footage disagree about when the structural defect first appears?",
+    # Timestamped video citations: surface the exact frame range that grounds the answer
+    "Show me every moment in the video where the inspector flags a fault, with the timestamp and a short description.",
+    # Multi-source grounding: blend evidence across files and modalities in one project
+    "Across every source in this project, what changed between the morning and afternoon inspection runs?",
 ]
 
 for q in queries:
