@@ -65,13 +65,6 @@ This repo is your starting point. Wire Kurious into your own data in minutes (Bu
 
 ## What you can build
 
-Kurious handles four things:
-
-- **Natural-language search across all your data.** Ask a question in plain English against your video, sensor, document, and structured data. Kurious finds the relevant moments regardless of where they live.
-- **Cited, evidence-grounded answers.** Every response points to the exact source moment, page, or row. When the evidence is not there, Kurious says so rather than fabricating.
-- **Cross-modal retrieval.** Ask a text question against video. Ask a sensor question against documents. The retrieval layer does not care about the source modality.
-- **Real-time at production scale.** Sub-second query latency at production cost. Suitable for live agents, dashboards, and customer-facing tools.
-
 ### Beta solutions built on Kurious
 
 | Beta | Domain | Try it |
