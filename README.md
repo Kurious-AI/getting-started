@@ -8,7 +8,7 @@
 Video, sensors, documents — cited answers in under a second.
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-3776AB?style=flat)
-![SDK](https://img.shields.io/badge/aintropy-0.5.5-2ea44f?style=flat)
+![SDK](https://img.shields.io/badge/kurious-0.8.0-2ea44f?style=flat)
 ![License](https://img.shields.io/badge/license-Apache_2.0-blue?style=flat)
 ![Status](https://img.shields.io/badge/status-beta-orange?style=flat)
 [![Discord](https://img.shields.io/badge/Discord-join-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/aintropy-community)
@@ -19,9 +19,9 @@ Video, sensors, documents — cited answers in under a second.
 </div>
 
 ```python
-from aintropy import AIntropy
+from kurious import Kurious
 
-client = AIntropy(api_key="ak_...")
+client = Kurious(api_key="ak_...")
 project = client.projects.create(name="My Project")
 
 client.projects.ingest(project.id, "footage.mp4", wait=True)
@@ -88,7 +88,7 @@ Four things. No Docker, no servers, no other accounts.
 |---|---|---|
 | 1 | **Python 3.9 or newer** | `python --version` — download from [python.org](https://www.python.org/downloads/) if needed |
 | 2 | **A terminal** | Mac: Terminal. Windows: PowerShell. Both pre-installed. |
-| 3 | **Your Kurious access token** | Provided when you sign up. This unlocks the SDK download. |
+| 3 | **A Kurious account** | Created in seconds from your terminal in [Step 2](#step-2--authenticate) — no browser needed. *(Package-install authentication is being finalized — see the note in [Step 1](#step-1--install-the-sdk).)* |
 | 4 | **Your data** | Video, audio, documents, images, or structured tables. Supported: `pdf`, `docx`, `txt`, `md`, `csv`, `parquet`, `png`, `jpg`, `mp3`, `wav`, `mp4`, `mov`, `mkv`, `webm` |
 
 > [!TIP]
@@ -125,36 +125,46 @@ flowchart LR
 ### Step 1 — Install the SDK
 
 ```bash
-export KURIOUS_TOKEN="<your-access-token>"
-
-pip install "aintropy==0.5.5" \
-  --index-url "https://aintropy:${KURIOUS_TOKEN}@pkgs.dev.azure.com/AIntropy-DevOps/Kurious-SDK/_packaging/kurious-sdk-pypi/pypi/simple/" \
-  --extra-index-url "https://pypi.org/simple/"
+pip install "kurious==0.8.0" \
+  --index-url "https://pkgs.dev.azure.com/AIntropy-DevOps/Kurious-SDK/_packaging/kurious-sdk-pypi/pypi/simple/"
 ```
 
 Verify:
 
 ```bash
-python -c "import aintropy; print(aintropy.__version__)"
-# Expected: 0.5.5
+python -c "import kurious; print(kurious.__version__)"
+# Expected: 0.8.0
 ```
 
-> [!WARNING]
-> Hit `401 Unauthorized`? Your access token is missing or wrong. Re-export it and rerun. Confirm the token has **Packaging (Read)** scope.
+> [!NOTE]
+> **Install authentication — coming soon.** The exact steps for authenticating to the
+> package feed are being finalized. If `pip install` fails with `401 Unauthorized`, the
+> feed credentials aren't published yet — check back shortly.
+
+<!-- TODO(eng): finalize package-feed auth before this repo goes public. Pending decision — publish `kurious` to public PyPI (no install token) vs. issue a packaging token at signup. Tracking: aintropy-engine-product issue (TBD, filed by Shivangi). -->
 
 ---
 
 ### Step 2 — Authenticate
 
-Sign up at **[TBD — prod signup URL]** to get your API key. Then:
+One command. No browser, no dashboard — `kurious init` creates your account and API key right from the terminal:
 
-```python
-from aintropy import AIntropy
-
-client = AIntropy(api_key="your_api_key_here")
+```bash
+kurious init
+# Enter your email: you@example.com
+# Enter the code we just emailed you: 123456
+# ✅ Account ready. API key saved to ~/.kurious/config.toml
 ```
 
-That is the full auth step. One line.
+Then load it automatically in your code — no keys to copy or paste:
+
+```python
+from kurious import Kurious
+
+client = Kurious.from_config()
+```
+
+`from_config()` reads the API key that `kurious init` saved for you.
 
 ---
 
@@ -197,6 +207,14 @@ print(f"Done — status: {job.status}")
 > [!TIP]
 > `status` says `completed` but search returns nothing? Give it another minute — indexing runs after preprocessing. If it is still empty, check that you ran `update_config` in Step 3.
 
+> [!TIP]
+> Ingesting a long video and don't want to block? Use `wait="background"` to get the job handle back immediately, then poll on your own schedule:
+> ```python
+> job = client.projects.ingest(PROJECT_ID, "/path/to/file.mp4", wait="background")
+> job.wait_until_running()   # returns once a worker picks up the job
+> # later, check on it: job.refresh(); print(job.status)
+> ```
+
 ---
 
 ### Step 5 — Run your first search
@@ -232,9 +250,10 @@ for h in hits.hits:
 | Method | What it does |
 |--------|-------------|
 | `client.projects.create(name, description)` | Create a new project (isolated index) |
-| `client.projects.ingest(project_id, path, wait=True)` | Upload and index a file or folder |
+| `client.projects.ingest(project_id, path, wait=True)` | Upload and index a file or folder (use `wait="background"` to return immediately) |
 | `client.search.intelligent(project_id, query)` | Natural-language answer with cited sources |
 | `client.search.rag(project_id, query, limit)` | Raw matching chunks with scores and timestamps |
+| `client.entitlements.get(company_id)` | Read your current plan type and request quota |
 
 **Full SDK docs:** [docs.kurious.aintropy.ai](https://docs.kurious.aintropy.ai) *(coming soon)*
 
@@ -298,7 +317,14 @@ You only need to ingest each file once.
 <details>
 <summary><b>The API key is rate-limited.</b></summary>
 <br>
-Trial keys are intentionally rate-limited for evaluation, not production workloads. If you hit the limit, contact know@aintropy.ai to discuss higher limits.
+Trial keys are intentionally rate-limited for evaluation, not production workloads. Check your current plan and daily quota anytime:
+
+```python
+ent = client.entitlements.get(company_id)
+print(ent.plan_type, ent.requests_per_day)
+```
+
+If you hit the limit, contact know@aintropy.ai to discuss higher limits.
 </details>
 
 <details>
